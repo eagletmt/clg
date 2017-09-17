@@ -28,15 +28,7 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
         eprintln!("No repository found matching {}", repository);
         Ok(1)
     } else if local_repos.len() == 1 {
-        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_owned());
-        debug!("Exec {} in {}", shell, local_repos[0].display());
-        println!("chdir {}", local_repos[0].display());
-
-        use std::os::unix::process::CommandExt;
-        let e = std::process::Command::new(shell)
-            .current_dir(&local_repos[0])
-            .exec();
-        Err(super::Error::from(e))
+        exec_shell(&local_repos[0])
     } else {
         eprintln!(
             "{} repositories found matching {}",
@@ -159,6 +151,29 @@ where
         }
     }
     Ok(())
+}
+
+#[cfg(unix)]
+fn exec_shell<P>(dir: P) -> Result<i32, super::Error>
+where
+    P: AsRef<std::path::Path>,
+{
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_owned());
+    debug!("Exec {} in {}", shell, dir.as_ref().display());
+    println!("chdir {}", dir.as_ref().display());
+
+    use std::os::unix::process::CommandExt;
+    let e = std::process::Command::new(shell).current_dir(dir).exec();
+    Err(super::Error::from(e))
+}
+
+#[cfg(windows)]
+fn exec_shell<P>(_dir: P) -> Result<i32, super::Error>
+where
+    P: AsRef<std::path::Path>,
+{
+    // TODO
+    unimplemented!();
 }
 
 #[cfg(test)]
