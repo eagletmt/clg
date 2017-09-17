@@ -9,7 +9,7 @@ pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     debug!("Clone {} to {}", uri, path.display());
     let mut child = std::process::Command::new("git")
         .arg("clone")
-        .arg(arg)
+        .arg(uri.into_string())
         .arg(&path)
         .spawn()?;
     let status = child.wait()?;
