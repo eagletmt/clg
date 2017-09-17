@@ -1,7 +1,8 @@
-extern crate clap;
 extern crate env_logger;
 extern crate url;
 
+#[macro_use]
+extern crate clap;
 #[macro_use]
 extern crate log;
 
@@ -52,6 +53,7 @@ fn main() {
     env_logger::init().unwrap();
 
     let app = clap::App::new("clg")
+        .version(crate_version!())
         .setting(clap::AppSettings::SubcommandRequired)
         .subcommand(clap::SubCommand::with_name("clone").arg(
             clap::Arg::with_name("URL").required(true).takes_value(true),
