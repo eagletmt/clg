@@ -69,6 +69,11 @@ pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     Ok(0)
 }
 
+pub fn root(_: &clap::ArgMatches) -> Result<i32, super::Error> {
+    println!("{}", root_dir()?.display());
+    Ok(0)
+}
+
 fn parse_git_url(u: &str) -> Result<url::Url, super::Error> {
     // https://git-scm.com/docs/git-push#_git_urls_a_id_urls_a
     match url::Url::parse(u) {

@@ -20,6 +20,8 @@ chdir /home/eagletmt/.ghq/github.com/eagletmt/clg
 % exit
 % clg list | grep cl
 github.com/eagletmt/clg
+% clg root
+/home/eagletmt/.ghq
 ```
 
 ### Clone

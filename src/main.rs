@@ -9,6 +9,7 @@ fn main() {
         ("clone", Some(submatch)) => clg::command::clone(submatch),
         ("look", Some(submatch)) => clg::command::look(submatch),
         ("list", Some(submatch)) => clg::command::list(submatch),
+        ("root", Some(submatch)) => clg::command::root(submatch),
         _ => unreachable!(),
     };
     match result {

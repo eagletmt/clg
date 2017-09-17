@@ -27,4 +27,7 @@ pub fn build_cli() -> clap::App<'static, 'static> {
                 "Generate repository list for completion",
             ),
         ))
+        .subcommand(clap::SubCommand::with_name("root").help(
+            "Print clg root directory",
+        ))
 }
