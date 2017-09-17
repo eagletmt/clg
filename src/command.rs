@@ -49,11 +49,30 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     }
 }
 
-pub fn list(_: &clap::ArgMatches) -> Result<i32, super::Error> {
+pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let root_dir = root_dir()?;
-    visit_local_repositories(&root_dir, &mut |path| {
-        println!("{}", path.strip_prefix(&root_dir).unwrap().display());
-    })?;
+    if matches.is_present("completion") {
+        visit_local_repositories(&root_dir, &mut |path| {
+            let host_and_path = path.strip_prefix(&root_dir).unwrap();
+            let repo = format!(
+                "{}",
+                std::path::Path::new(host_and_path.file_name().unwrap()).display()
+            );
+            println!("{}", repo);
+            if let Some(host_and_user) = host_and_path.parent() {
+                let user = host_and_user.file_name().unwrap();
+                if let Some(user) = user.to_str() {
+                    if !user.contains('.') {
+                        println!("{}/{}", std::path::Path::new(user).display(), repo);
+                    }
+                }
+            }
+        })?;
+    } else {
+        visit_local_repositories(&root_dir, &mut |path| {
+            println!("{}", path.strip_prefix(&root_dir).unwrap().display());
+        })?;
+    }
     Ok(0)
 }
 
