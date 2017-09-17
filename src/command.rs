@@ -3,9 +3,10 @@ extern crate std;
 extern crate url;
 
 pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
+    let name = matches.value_of("name");
     let arg = matches.value_of("URL").unwrap();
     let uri = parse_git_url(arg)?;
-    let path = destination_path_for(&uri)?;
+    let path = destination_path_for(&uri, name)?;
     debug!("Clone {} to {}", uri, path.display());
     let mut child = std::process::Command::new("git")
         .arg("clone")
@@ -114,11 +115,18 @@ fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, super::Erro
     )?)
 }
 
-fn destination_path_for(uri: &url::Url) -> Result<std::path::PathBuf, super::Error> {
+fn destination_path_for(
+    uri: &url::Url,
+    name: Option<&str>,
+) -> Result<std::path::PathBuf, super::Error> {
     let mut pathbuf = root_dir()?;
     pathbuf.push(uri.host_str().unwrap());
     for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
         pathbuf.push(c.as_os_str());
+    }
+    if let Some(ref name) = name {
+        pathbuf.pop();
+        pathbuf.push(name);
     }
     Ok(pathbuf)
 }
