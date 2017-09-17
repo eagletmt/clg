@@ -14,4 +14,5 @@ pub fn build_cli() -> clap::App<'static, 'static> {
                     .takes_value(true),
             ),
         )
+        .subcommand(clap::SubCommand::with_name("list"))
 }

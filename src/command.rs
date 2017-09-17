@@ -49,6 +49,14 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     }
 }
 
+pub fn list(_: &clap::ArgMatches) -> Result<i32, super::Error> {
+    let root_dir = root_dir()?;
+    visit_local_repositories(&root_dir, &mut |path| {
+        println!("{}", path.strip_prefix(&root_dir).unwrap().display());
+    })?;
+    Ok(0)
+}
+
 fn parse_git_url(u: &str) -> Result<url::Url, super::Error> {
     // https://git-scm.com/docs/git-push#_git_urls_a_id_urls_a
     match url::Url::parse(u) {
