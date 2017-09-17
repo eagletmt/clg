@@ -55,10 +55,18 @@ fn main() {
         .setting(clap::AppSettings::SubcommandRequired)
         .subcommand(clap::SubCommand::with_name("clone").arg(
             clap::Arg::with_name("URL").required(true).takes_value(true),
-        ));
+        ))
+        .subcommand(
+            clap::SubCommand::with_name("look").arg(
+                clap::Arg::with_name("REPOSITORY")
+                    .required(true)
+                    .takes_value(true),
+            ),
+        );
 
     let result = match app.get_matches().subcommand() {
         ("clone", Some(submatch)) => clone(submatch),
+        ("look", Some(submatch)) => look(submatch),
         _ => unreachable!(),
     };
     match result {
@@ -123,17 +131,75 @@ fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, Error> {
 }
 
 fn destination_path_for(uri: &url::Url) -> Result<std::path::PathBuf, Error> {
+    let mut pathbuf = root_dir()?;
+    pathbuf.push(uri.host_str().unwrap());
+    for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
+        pathbuf.push(c.as_os_str());
+    }
+    Ok(pathbuf)
+}
+
+fn root_dir() -> Result<std::path::PathBuf, Error> {
     match std::env::home_dir() {
         Some(mut pathbuf) => {
             pathbuf.push(".ghq"); // TODO: Make customizable
-            pathbuf.push(uri.host_str().unwrap());
-            for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
-                pathbuf.push(c.as_os_str());
-            }
             Ok(pathbuf)
         }
         None => Err(Error::Custom("Cannot get HOME directory".to_owned())),
     }
+}
+
+fn look(matches: &clap::ArgMatches) -> Result<i32, Error> {
+    let repository = matches.value_of("REPOSITORY").unwrap();
+    let root_dir = root_dir()?;
+    let mut local_repos = vec![];
+    visit_local_repositories(&root_dir, &mut |path| if path.ends_with(repository) {
+        local_repos.push(path.to_path_buf());
+    })?;
+    if local_repos.is_empty() {
+        eprintln!("No repository found matching {}", repository);
+        Ok(1)
+    } else if local_repos.len() == 1 {
+        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_owned());
+        debug!("Exec {} in {}", shell, local_repos[0].display());
+        println!("chdir {}", local_repos[0].display());
+
+        use std::os::unix::process::CommandExt;
+        let e = std::process::Command::new(shell)
+            .current_dir(&local_repos[0])
+            .exec();
+        Err(Error::from(e))
+    } else {
+        eprintln!(
+            "{} repositories found matching {}",
+            local_repos.len(),
+            repository
+        );
+        for r in local_repos {
+            eprintln!("  - {}", r.display());
+        }
+        Ok(1)
+    }
+}
+
+fn visit_local_repositories<P, F>(dir: P, callback: &mut F) -> Result<(), std::io::Error>
+where
+    P: AsRef<std::path::Path>,
+    F: FnMut(&std::path::Path),
+{
+    for entry in std::fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            let git_dir = path.join(".git");
+            if git_dir.is_dir() {
+                callback(&path);
+            } else {
+                visit_local_repositories(&path, callback)?;
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
