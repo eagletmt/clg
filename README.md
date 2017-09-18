@@ -60,7 +60,7 @@ origin  https://github.com/eagletmt/clg (push)
 ## Configuration
 Write configuration to ~/.clg.toml.
 
-```
+```toml
 # Compatible directory structure with ghq
 root = "/home/eagletmt/.ghq"
 ```
