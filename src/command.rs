@@ -1,7 +1,6 @@
 extern crate clap;
 extern crate std;
 extern crate url;
-extern crate toml;
 
 pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let name = matches.value_of("name");
@@ -125,7 +124,7 @@ fn destination_path_for(
     for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
         pathbuf.push(c.as_os_str());
     }
-    if let Some(ref name) = name {
+    if let Some(name) = name {
         pathbuf.pop();
         pathbuf.push(name);
     }
