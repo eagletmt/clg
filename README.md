@@ -57,5 +57,13 @@ origin  https://github.com/eagletmt/clg (fetch)
 origin  https://github.com/eagletmt/clg (push)
 ```
 
+## Configuration
+Write configuration to ~/.clg.toml.
+
+```
+# Compatible directory structure with ghq
+root = "/home/eagletmt/.ghq"
+```
+
 ## Acknowledgments
 This software is based on [ghq](https://github.com/motemen/ghq) written by motemen.

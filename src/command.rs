@@ -1,12 +1,14 @@
 extern crate clap;
 extern crate std;
 extern crate url;
+extern crate toml;
 
 pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let name = matches.value_of("name");
     let arg = matches.value_of("URL").unwrap();
+    let config = super::Config::load_from_file();
     let uri = parse_git_url(arg)?;
-    let path = destination_path_for(&uri, name)?;
+    let path = destination_path_for(&config, &uri, name)?;
     debug!("Clone {} to {}", uri, path.display());
     let mut child = std::process::Command::new("git")
         .arg("clone")
@@ -19,9 +21,9 @@ pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
 
 pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let repository = matches.value_of("REPOSITORY").unwrap();
-    let root_dir = root_dir()?;
+    let config = super::Config::load_from_file();
     let mut local_repos = vec![];
-    visit_local_repositories(&root_dir, &mut |path| if path.ends_with(repository) {
+    visit_local_repositories(&config.root, &mut |path| if path.ends_with(repository) {
         local_repos.push(path.to_path_buf());
     })?;
     if local_repos.is_empty() {
@@ -43,10 +45,10 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
 }
 
 pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
-    let root_dir = root_dir()?;
+    let config = super::Config::load_from_file();
     if matches.is_present("completion") {
-        visit_local_repositories(&root_dir, &mut |path| {
-            let host_and_path = path.strip_prefix(&root_dir).unwrap();
+        visit_local_repositories(&config.root, &mut |path| {
+            let host_and_path = path.strip_prefix(&config.root).unwrap();
             let repo = format!(
                 "{}",
                 std::path::Path::new(host_and_path.file_name().unwrap()).display()
@@ -62,15 +64,16 @@ pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
             }
         })?;
     } else {
-        visit_local_repositories(&root_dir, &mut |path| {
-            println!("{}", path.strip_prefix(&root_dir).unwrap().display());
+        visit_local_repositories(&config.root, &mut |path| {
+            println!("{}", path.strip_prefix(&config.root).unwrap().display());
         })?;
     }
     Ok(0)
 }
 
 pub fn root(_: &clap::ArgMatches) -> Result<i32, super::Error> {
-    println!("{}", root_dir()?.display());
+    let config = super::Config::load_from_file();
+    println!("{}", config.root.display());
     Ok(0)
 }
 
@@ -113,10 +116,11 @@ fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, super::Erro
 }
 
 fn destination_path_for(
+    config: &super::Config,
     uri: &url::Url,
     name: Option<&str>,
 ) -> Result<std::path::PathBuf, super::Error> {
-    let mut pathbuf = root_dir()?;
+    let mut pathbuf = config.root.clone();
     pathbuf.push(uri.host_str().unwrap());
     for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
         pathbuf.push(c.as_os_str());
@@ -126,16 +130,6 @@ fn destination_path_for(
         pathbuf.push(name);
     }
     Ok(pathbuf)
-}
-
-fn root_dir() -> Result<std::path::PathBuf, super::Error> {
-    match std::env::home_dir() {
-        Some(mut pathbuf) => {
-            pathbuf.push(".ghq"); // TODO: Make customizable
-            Ok(pathbuf)
-        }
-        None => Err(super::Error::Custom("Cannot get HOME directory".to_owned())),
-    }
 }
 
 fn visit_local_repositories<P, F>(dir: P, callback: &mut F) -> Result<(), std::io::Error>

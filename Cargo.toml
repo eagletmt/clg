@@ -7,4 +7,7 @@ authors = ["Kohei Suzuki <eagletmt@gmail.com>"]
 clap = "2.26"
 env_logger = "0.4"
 log = "0.3"
+serde = "1.0"
+serde_derive = "1.0"
+toml = "0.4"
 url = "1.5"
