@@ -128,6 +128,9 @@ fn destination_path_for(
         pathbuf.pop();
         pathbuf.push(name);
     }
+    if pathbuf.extension() == Some(std::ffi::OsStr::new("git")) {
+        pathbuf.set_extension("");
+    }
     Ok(pathbuf)
 }
 
@@ -197,6 +200,46 @@ mod test {
         assert_eq!(
             super::url::Url::parse("ssh://git@github.com/eagletmt/clg").unwrap(),
             super::parse_git_url("git@github.com:eagletmt/clg").unwrap()
+        );
+    }
+
+    fn tmp_config() -> super::super::Config {
+        super::super::Config { root: super::std::path::PathBuf::from("/tmp") }
+    }
+
+    #[test]
+    fn destination_path_default() {
+        assert_eq!(
+            super::destination_path_for(
+                &tmp_config(),
+                &super::url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
+                None,
+            ).unwrap(),
+            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
+        );
+    }
+
+    #[test]
+    fn destination_path_with_extension() {
+        assert_eq!(
+            super::destination_path_for(
+                &tmp_config(),
+                &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
+                None,
+            ).unwrap(),
+            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
+        );
+    }
+
+    #[test]
+    fn destination_path_with_name() {
+        assert_eq!(
+            super::destination_path_for(
+                &tmp_config(),
+                &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
+                Some("clg2"),
+            ).unwrap(),
+            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg2")
         );
     }
 }
