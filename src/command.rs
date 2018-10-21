@@ -22,8 +22,10 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let repository = matches.value_of("REPOSITORY").unwrap();
     let config = super::Config::load_from_file();
     let mut local_repos = vec![];
-    visit_local_repositories(&config.root, &mut |path| if path.ends_with(repository) {
-        local_repos.push(path.to_path_buf());
+    visit_local_repositories(&config.root, &mut |path| {
+        if path.ends_with(repository) {
+            local_repos.push(path.to_path_buf());
+        }
     })?;
     if local_repos.is_empty() {
         eprintln!("No repository found matching {}", repository);
@@ -109,9 +111,10 @@ fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, super::Erro
     debug!("{} is scp-like URI", u);
     let user_and_host = &u[..colon_idx];
     let path = &u[colon_idx + 1..];
-    Ok(url::Url::parse(
-        &format!("ssh://{}/{}", user_and_host, path),
-    )?)
+    Ok(url::Url::parse(&format!(
+        "ssh://{}/{}",
+        user_and_host, path
+    ))?)
 }
 
 fn destination_path_for(
@@ -204,7 +207,9 @@ mod test {
     }
 
     fn tmp_config() -> super::super::Config {
-        super::super::Config { root: super::std::path::PathBuf::from("/tmp") }
+        super::super::Config {
+            root: super::std::path::PathBuf::from("/tmp"),
+        }
     }
 
     #[test]

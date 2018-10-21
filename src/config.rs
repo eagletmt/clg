@@ -10,7 +10,9 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { root: default_root() }
+        Self {
+            root: default_root(),
+        }
     }
 }
 
