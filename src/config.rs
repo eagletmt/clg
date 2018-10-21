@@ -1,5 +1,6 @@
-extern crate toml;
+extern crate dirs;
 extern crate std;
+extern crate toml;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -14,14 +15,14 @@ impl Default for Config {
 }
 
 fn default_root() -> std::path::PathBuf {
-    let mut root = std::env::home_dir().expect("Cannot get HOME directory");
+    let mut root = dirs::home_dir().expect("Cannot get HOME directory");
     root.push(".clg");
     root
 }
 
 impl Config {
     pub fn load_from_file() -> Config {
-        let mut path = std::env::home_dir().expect("Cannot get HOME directory");
+        let mut path = dirs::home_dir().expect("Cannot get HOME directory");
         path.push(".clg.toml");
         if path.exists() {
             match std::fs::File::open(&path) {
