@@ -6,9 +6,9 @@ extern crate log;
 extern crate serde_derive;
 
 pub mod error;
-pub use error::Error;
+pub use crate::error::Error;
 
 pub mod cli;
 pub mod command;
 pub mod config;
-pub use config::Config;
+pub use crate::config::Config;
