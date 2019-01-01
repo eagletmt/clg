@@ -1,8 +1,6 @@
-extern crate dirs;
-extern crate std;
-extern crate toml;
+use log::{debug, error};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct Config {
     #[serde(default = "default_root")]
     pub root: std::path::PathBuf,

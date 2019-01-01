@@ -1,6 +1,3 @@
-extern crate std;
-extern crate url;
-
 #[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),

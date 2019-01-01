@@ -1,4 +1,4 @@
-extern crate clap;
+use clap::crate_version;
 
 pub fn build_cli() -> clap::App<'static, 'static> {
     clap::App::new("clg")
@@ -12,18 +12,22 @@ pub fn build_cli() -> clap::App<'static, 'static> {
                         .long("name")
                         .takes_value(true)
                         .help("Change name of local repository"),
-                ).arg(clap::Arg::with_name("URL").required(true).takes_value(true)),
-        ).subcommand(
+                )
+                .arg(clap::Arg::with_name("URL").required(true).takes_value(true)),
+        )
+        .subcommand(
             clap::SubCommand::with_name("look").arg(
                 clap::Arg::with_name("REPOSITORY")
                     .required(true)
                     .takes_value(true),
             ),
-        ).subcommand(
+        )
+        .subcommand(
             clap::SubCommand::with_name("list").arg(
                 clap::Arg::with_name("completion")
                     .long("completion")
                     .help("Generate repository list for completion"),
             ),
-        ).subcommand(clap::SubCommand::with_name("root").help("Print clg root directory"))
+        )
+        .subcommand(clap::SubCommand::with_name("root").help("Print clg root directory"))
 }

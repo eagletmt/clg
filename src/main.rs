@@ -1,6 +1,3 @@
-extern crate clg;
-extern crate env_logger;
-
 fn main() {
     env_logger::init();
     let app = clg::cli::build_cli();

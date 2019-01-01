@@ -1,6 +1,4 @@
-extern crate clap;
-extern crate std;
-extern crate url;
+use log::debug;
 
 pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     let name = matches.value_of("name");
@@ -219,7 +217,8 @@ mod test {
                 &tmp_config(),
                 &super::url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
                 None,
-            ).unwrap(),
+            )
+            .unwrap(),
             super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
         );
     }
@@ -231,7 +230,8 @@ mod test {
                 &tmp_config(),
                 &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
                 None,
-            ).unwrap(),
+            )
+            .unwrap(),
             super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
         );
     }
@@ -243,7 +243,8 @@ mod test {
                 &tmp_config(),
                 &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
                 Some("clg2"),
-            ).unwrap(),
+            )
+            .unwrap(),
             super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg2")
         );
     }
