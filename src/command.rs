@@ -183,7 +183,7 @@ mod test {
     #[test]
     fn parse_https_url() {
         assert_eq!(
-            super::url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
+            url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
             super::parse_git_url("https://github.com/eagletmt/clg").unwrap()
         );
     }
@@ -191,7 +191,7 @@ mod test {
     #[test]
     fn parse_ssh_url() {
         assert_eq!(
-            super::url::Url::parse("ssh://git@github.com/eagletmt/clg").unwrap(),
+            url::Url::parse("ssh://git@github.com/eagletmt/clg").unwrap(),
             super::parse_git_url("ssh://git@github.com/eagletmt/clg").unwrap()
         );
     }
@@ -199,14 +199,14 @@ mod test {
     #[test]
     fn parse_scp_like_ssh_url() {
         assert_eq!(
-            super::url::Url::parse("ssh://git@github.com/eagletmt/clg").unwrap(),
+            url::Url::parse("ssh://git@github.com/eagletmt/clg").unwrap(),
             super::parse_git_url("git@github.com:eagletmt/clg").unwrap()
         );
     }
 
     fn tmp_config() -> super::super::Config {
         super::super::Config {
-            root: super::std::path::PathBuf::from("/tmp"),
+            root: std::path::PathBuf::from("/tmp"),
         }
     }
 
@@ -215,11 +215,11 @@ mod test {
         assert_eq!(
             super::destination_path_for(
                 &tmp_config(),
-                &super::url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
+                &url::Url::parse("https://github.com/eagletmt/clg").unwrap(),
                 None,
             )
             .unwrap(),
-            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
+            std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
         );
     }
 
@@ -228,11 +228,11 @@ mod test {
         assert_eq!(
             super::destination_path_for(
                 &tmp_config(),
-                &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
+                &url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
                 None,
             )
             .unwrap(),
-            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
+            std::path::PathBuf::from("/tmp/github.com/eagletmt/clg")
         );
     }
 
@@ -241,11 +241,11 @@ mod test {
         assert_eq!(
             super::destination_path_for(
                 &tmp_config(),
-                &super::url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
+                &url::Url::parse("https://github.com/eagletmt/clg.git").unwrap(),
                 Some("clg2"),
             )
             .unwrap(),
-            super::std::path::PathBuf::from("/tmp/github.com/eagletmt/clg2")
+            std::path::PathBuf::from("/tmp/github.com/eagletmt/clg2")
         );
     }
 }
