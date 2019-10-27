@@ -14,6 +14,7 @@ impl std::fmt::Display for Error {
     }
 }
 impl std::error::Error for Error {
+    #[allow(bare_trait_objects)]
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
             Error::Io(ref e) => Some(e),
