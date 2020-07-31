@@ -153,27 +153,36 @@ where
     Ok(())
 }
 
-#[cfg(unix)]
 fn exec_shell<P>(dir: P) -> Result<i32, Box<dyn std::error::Error>>
 where
     P: AsRef<std::path::Path>,
 {
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_owned());
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| {
+        if cfg!(windows) {
+            "powershell.exe".to_owned()
+        } else {
+            "/bin/sh".to_owned()
+        }
+    });
     log::debug!("Exec {} in {}", shell, dir.as_ref().display());
     println!("chdir {}", dir.as_ref().display());
 
+    let mut cmd = std::process::Command::new(shell);
+    cmd.current_dir(dir);
+    exec_cmd(cmd)
+}
+
+#[cfg(unix)]
+fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, Box<dyn std::error::Error>> {
     use std::os::unix::process::CommandExt;
-    let e = std::process::Command::new(shell).current_dir(dir).exec();
+    let e = cmd.exec();
     Err(Box::new(e))
 }
 
 #[cfg(windows)]
-fn exec_shell<P>(_dir: P) -> Result<i32, Box<dyn std::error::Error>>
-where
-    P: AsRef<std::path::Path>,
-{
-    // TODO
-    unimplemented!();
+fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, Box<dyn std::error::Error>> {
+    let status = cmd.status()?;
+    Ok(status.code().unwrap_or(1))
 }
 
 #[cfg(test)]
