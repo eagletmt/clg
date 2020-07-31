@@ -1,6 +1,6 @@
 use log::debug;
 
-pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
+pub fn clone(matches: &clap::ArgMatches) -> Result<i32, Box<dyn std::error::Error>> {
     let name = matches.value_of("name");
     let arg = matches.value_of("URL").unwrap();
     let config = super::Config::load_from_file();
@@ -16,7 +16,7 @@ pub fn clone(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     Ok(status.code().unwrap_or(1))
 }
 
-pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
+pub fn look(matches: &clap::ArgMatches) -> Result<i32, Box<dyn std::error::Error>> {
     let repository = matches.value_of("REPOSITORY").unwrap();
     let config = super::Config::load_from_file();
     let mut local_repos = vec![];
@@ -43,7 +43,7 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     }
 }
 
-pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
+pub fn list(matches: &clap::ArgMatches) -> Result<i32, Box<dyn std::error::Error>> {
     let config = super::Config::load_from_file();
     if matches.is_present("completion") {
         visit_local_repositories(&config.root, &mut |path| {
@@ -70,13 +70,13 @@ pub fn list(matches: &clap::ArgMatches) -> Result<i32, super::Error> {
     Ok(0)
 }
 
-pub fn root(_: &clap::ArgMatches) -> Result<i32, super::Error> {
+pub fn root(_: &clap::ArgMatches) -> Result<i32, Box<dyn std::error::Error>> {
     let config = super::Config::load_from_file();
     println!("{}", config.root.display());
     Ok(0)
 }
 
-fn parse_git_url(u: &str) -> Result<url::Url, super::Error> {
+fn parse_git_url(u: &str) -> Result<url::Url, Box<dyn std::error::Error>> {
     // https://git-scm.com/docs/git-push#_git_urls_a_id_urls_a
     match url::Url::parse(u) {
         Ok(uri) => {
@@ -101,11 +101,11 @@ fn parse_git_url(u: &str) -> Result<url::Url, super::Error> {
             // Map :user/:repo to https://github.com/:user/:repo
             Ok(url::Url::parse("https://github.com").unwrap().join(u)?)
         }
-        Err(e) => Err(super::Error::from(e)),
+        Err(e) => Err(e)?,
     }
 }
 
-fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, super::Error> {
+fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, Box<dyn std::error::Error>> {
     debug!("{} is scp-like URI", u);
     let user_and_host = &u[..colon_idx];
     let path = &u[colon_idx + 1..];
@@ -119,7 +119,7 @@ fn destination_path_for(
     config: &super::Config,
     uri: &url::Url,
     name: Option<&str>,
-) -> Result<std::path::PathBuf, super::Error> {
+) -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let mut pathbuf = config.root.clone();
     pathbuf.push(uri.host_str().unwrap());
     for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
@@ -156,7 +156,7 @@ where
 }
 
 #[cfg(unix)]
-fn exec_shell<P>(dir: P) -> Result<i32, super::Error>
+fn exec_shell<P>(dir: P) -> Result<i32, Box<dyn std::error::Error>>
 where
     P: AsRef<std::path::Path>,
 {
@@ -166,11 +166,11 @@ where
 
     use std::os::unix::process::CommandExt;
     let e = std::process::Command::new(shell).current_dir(dir).exec();
-    Err(super::Error::from(e))
+    Err(Box::new(e))
 }
 
 #[cfg(windows)]
-fn exec_shell<P>(_dir: P) -> Result<i32, super::Error>
+fn exec_shell<P>(_dir: P) -> Result<i32, Box<dyn std::error::Error>>
 where
     P: AsRef<std::path::Path>,
 {
