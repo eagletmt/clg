@@ -1,8 +1,6 @@
-use clap::crate_version;
-
 pub fn build_cli() -> clap::App<'static, 'static> {
     clap::App::new("clg")
-        .version(crate_version!())
+        .version(clap::crate_version!())
         .setting(clap::AppSettings::SubcommandRequired)
         .subcommand(
             clap::SubCommand::with_name("clone")
