@@ -1,5 +1,3 @@
-use log::{debug, error};
-
 #[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
 pub struct Config {
     #[serde(default = "default_root")]
@@ -35,24 +33,24 @@ impl Config {
                             match r {
                                 Ok(config) => config,
                                 Err(e) => {
-                                    error!("Failed to deserialize {}: {}", path.display(), e);
+                                    log::error!("Failed to deserialize {}: {}", path.display(), e);
                                     Default::default()
                                 }
                             }
                         }
                         Err(e) => {
-                            error!("Failed to read {}: {}", path.display(), e);
+                            log::error!("Failed to read {}: {}", path.display(), e);
                             Default::default()
                         }
                     }
                 }
                 Err(e) => {
-                    error!("Failed to open {}: {}", path.display(), e);
+                    log::error!("Failed to open {}: {}", path.display(), e);
                     Default::default()
                 }
             }
         } else {
-            debug!("No ~/.clg.toml");
+            log::debug!("No ~/.clg.toml");
             Default::default()
         }
     }

@@ -1,12 +1,10 @@
-use log::debug;
-
 pub fn clone(matches: &clap::ArgMatches) -> Result<i32, Box<dyn std::error::Error>> {
     let name = matches.value_of("name");
     let arg = matches.value_of("URL").unwrap();
     let config = super::Config::load_from_file();
     let uri = parse_git_url(arg)?;
     let path = destination_path_for(&config, &uri, name)?;
-    debug!("Clone {} to {}", uri, path.display());
+    log::debug!("Clone {} to {}", uri, path.display());
     let mut child = std::process::Command::new("git")
         .arg("clone")
         .arg(uri.into_string())
@@ -80,7 +78,7 @@ fn parse_git_url(u: &str) -> Result<url::Url, Box<dyn std::error::Error>> {
     // https://git-scm.com/docs/git-push#_git_urls_a_id_urls_a
     match url::Url::parse(u) {
         Ok(uri) => {
-            debug!("{} is absolute URI", u);
+            log::debug!("{} is absolute URI", u);
             Ok(uri)
         }
         Err(url::ParseError::RelativeUrlWithoutBase) => {
@@ -97,7 +95,7 @@ fn parse_git_url(u: &str) -> Result<url::Url, Box<dyn std::error::Error>> {
                     }
                 }
             }
-            debug!("{} is GitHub.com URI", u);
+            log::debug!("{} is GitHub.com URI", u);
             // Map :user/:repo to https://github.com/:user/:repo
             Ok(url::Url::parse("https://github.com").unwrap().join(u)?)
         }
@@ -106,7 +104,7 @@ fn parse_git_url(u: &str) -> Result<url::Url, Box<dyn std::error::Error>> {
 }
 
 fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, Box<dyn std::error::Error>> {
-    debug!("{} is scp-like URI", u);
+    log::debug!("{} is scp-like URI", u);
     let user_and_host = &u[..colon_idx];
     let path = &u[colon_idx + 1..];
     Ok(url::Url::parse(&format!(
@@ -161,7 +159,7 @@ where
     P: AsRef<std::path::Path>,
 {
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_owned());
-    debug!("Exec {} in {}", shell, dir.as_ref().display());
+    log::debug!("Exec {} in {}", shell, dir.as_ref().display());
     println!("chdir {}", dir.as_ref().display());
 
     use std::os::unix::process::CommandExt;
