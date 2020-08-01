@@ -99,7 +99,7 @@ fn parse_git_url(u: &str) -> Result<url::Url, Box<dyn std::error::Error>> {
             // Map :user/:repo to https://github.com/:user/:repo
             Ok(url::Url::parse("https://github.com").unwrap().join(u)?)
         }
-        Err(e) => Err(e)?,
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -176,7 +176,7 @@ where
 fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, Box<dyn std::error::Error>> {
     use std::os::unix::process::CommandExt;
     let e = cmd.exec();
-    Err(Box::new(e))
+    Err(e.into())
 }
 
 #[cfg(windows)]
