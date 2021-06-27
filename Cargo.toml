@@ -5,6 +5,7 @@ authors = ["Kohei Suzuki <eagletmt@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
 clap = "2.26"
 dirs = "3.0"
 env_logger = "0.8"
