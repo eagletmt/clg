@@ -180,7 +180,7 @@ fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, anyhow::Error> {
 }
 
 #[cfg(windows)]
-fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, Box<dyn std::error::Error>> {
+fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, anyhow::Error> {
     let status = cmd.status()?;
     Ok(status.code().unwrap_or(1))
 }
