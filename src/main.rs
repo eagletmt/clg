@@ -1,13 +1,13 @@
 fn main() -> Result<(), anyhow::Error> {
-    env_logger::init();
-    let app = clg::cli::build_cli();
+    tracing_subscriber::fmt::init();
+    use clap::Parser as _;
+    let args = clg::cli::Args::parse();
 
-    match app.get_matches().subcommand() {
-        ("clone", Some(submatch)) => clg::command::clone(submatch),
-        ("look", Some(submatch)) => clg::command::look(submatch),
-        ("list", Some(submatch)) => clg::command::list(submatch),
-        ("root", Some(submatch)) => clg::command::root(submatch),
-        _ => unreachable!(),
+    match args.command {
+        clg::cli::Command::Clone(args) => clg::command::clone(args),
+        clg::cli::Command::Look(args) => clg::command::look(args),
+        clg::cli::Command::List(args) => clg::command::list(args),
+        clg::cli::Command::Root => clg::command::root(),
     }?;
     Ok(())
 }

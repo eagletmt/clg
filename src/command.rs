@@ -1,10 +1,8 @@
-pub fn clone(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
-    let name = matches.value_of("name");
-    let arg = matches.value_of("URL").unwrap();
+pub fn clone(args: crate::cli::CloneArgs) -> anyhow::Result<i32> {
     let config = super::Config::load_from_file();
-    let uri = parse_git_url(arg)?;
-    let path = destination_path_for(&config, &uri, name)?;
-    log::debug!("Clone {} to {}", uri, path.display());
+    let uri = parse_git_url(&args.url)?;
+    let path = destination_path_for(&config, &uri, args.name.as_deref())?;
+    tracing::debug!("Clone {} to {}", uri, path.display());
     let mut child = std::process::Command::new("git")
         .arg("clone")
         .arg(String::from(uri))
@@ -14,17 +12,16 @@ pub fn clone(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
     Ok(status.code().unwrap_or(1))
 }
 
-pub fn look(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
-    let repository = matches.value_of("REPOSITORY").unwrap();
+pub fn look(args: crate::cli::LookArgs) -> anyhow::Result<i32> {
     let config = super::Config::load_from_file();
     let mut local_repos = vec![];
     visit_local_repositories(&config.root, &mut |path| {
-        if path.ends_with(repository) {
+        if path.ends_with(&args.repository) {
             local_repos.push(path.to_path_buf());
         }
     })?;
     if local_repos.is_empty() {
-        eprintln!("No repository found matching {}", repository);
+        eprintln!("No repository found matching {}", args.repository);
         Ok(1)
     } else if local_repos.len() == 1 {
         exec_shell(&local_repos[0])
@@ -32,7 +29,7 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
         eprintln!(
             "{} repositories found matching {}",
             local_repos.len(),
-            repository
+            args.repository
         );
         for r in local_repos {
             eprintln!("  - {}", r.display());
@@ -41,9 +38,9 @@ pub fn look(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
     }
 }
 
-pub fn list(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
+pub fn list(args: crate::cli::ListArgs) -> anyhow::Result<i32> {
     let config = super::Config::load_from_file();
-    if matches.is_present("completion") {
+    if args.completion {
         visit_local_repositories(&config.root, &mut |path| {
             let host_and_path = path.strip_prefix(&config.root).unwrap();
             let repo = format!(
@@ -68,17 +65,17 @@ pub fn list(matches: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
     Ok(0)
 }
 
-pub fn root(_: &clap::ArgMatches) -> Result<i32, anyhow::Error> {
+pub fn root() -> anyhow::Result<i32> {
     let config = super::Config::load_from_file();
     println!("{}", config.root.display());
     Ok(0)
 }
 
-fn parse_git_url(u: &str) -> Result<url::Url, anyhow::Error> {
+fn parse_git_url(u: &str) -> anyhow::Result<url::Url> {
     // https://git-scm.com/docs/git-push#_git_urls_a_id_urls_a
     match url::Url::parse(u) {
         Ok(uri) => {
-            log::debug!("{} is absolute URI", u);
+            tracing::debug!("{} is absolute URI", u);
             Ok(uri)
         }
         Err(url::ParseError::RelativeUrlWithoutBase) => {
@@ -95,7 +92,7 @@ fn parse_git_url(u: &str) -> Result<url::Url, anyhow::Error> {
                     }
                 }
             }
-            log::debug!("{} is GitHub.com URI", u);
+            tracing::debug!("{} is GitHub.com URI", u);
             // Map :user/:repo to https://github.com/:user/:repo
             Ok(url::Url::parse("https://github.com").unwrap().join(u)?)
         }
@@ -103,8 +100,8 @@ fn parse_git_url(u: &str) -> Result<url::Url, anyhow::Error> {
     }
 }
 
-fn parse_scp_like_url(u: &str, colon_idx: usize) -> Result<url::Url, anyhow::Error> {
-    log::debug!("{} is scp-like URI", u);
+fn parse_scp_like_url(u: &str, colon_idx: usize) -> anyhow::Result<url::Url> {
+    tracing::debug!("{} is scp-like URI", u);
     let user_and_host = &u[..colon_idx];
     let path = &u[colon_idx + 1..];
     Ok(url::Url::parse(&format!(
@@ -117,7 +114,7 @@ fn destination_path_for(
     config: &super::Config,
     uri: &url::Url,
     name: Option<&str>,
-) -> Result<std::path::PathBuf, anyhow::Error> {
+) -> anyhow::Result<std::path::PathBuf> {
     let mut pathbuf = config.root.clone();
     pathbuf.push(uri.host_str().unwrap());
     for c in std::path::PathBuf::from(uri.path()).components().skip(1) {
@@ -153,7 +150,7 @@ where
     Ok(())
 }
 
-fn exec_shell<P>(dir: P) -> Result<i32, anyhow::Error>
+fn exec_shell<P>(dir: P) -> anyhow::Result<i32>
 where
     P: AsRef<std::path::Path>,
 {
@@ -164,7 +161,7 @@ where
             "/bin/sh".to_owned()
         }
     });
-    log::debug!("Exec {} in {}", shell, dir.as_ref().display());
+    tracing::debug!("Exec {} in {}", shell, dir.as_ref().display());
     println!("chdir {}", dir.as_ref().display());
 
     let mut cmd = std::process::Command::new(shell);
@@ -173,14 +170,14 @@ where
 }
 
 #[cfg(unix)]
-fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, anyhow::Error> {
+fn exec_cmd(mut cmd: std::process::Command) -> anyhow::Result<i32> {
     use std::os::unix::process::CommandExt;
     let e = cmd.exec();
     Err(e.into())
 }
 
 #[cfg(windows)]
-fn exec_cmd(mut cmd: std::process::Command) -> Result<i32, anyhow::Error> {
+fn exec_cmd(mut cmd: std::process::Command) -> anyhow::Result<i32> {
     let status = cmd.status()?;
     Ok(status.code().unwrap_or(1))
 }

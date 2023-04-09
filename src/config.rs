@@ -1,4 +1,4 @@
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
     #[serde(default = "default_root")]
     pub root: std::path::PathBuf,
@@ -26,31 +26,35 @@ impl Config {
             match std::fs::File::open(&path) {
                 Ok(mut file) => {
                     use std::io::Read;
-                    let mut buf = vec![];
-                    match file.read_to_end(&mut buf) {
+                    let mut buf = String::new();
+                    match file.read_to_string(&mut buf) {
                         Ok(_) => {
-                            let r: Result<Config, toml::de::Error> = toml::from_slice(&buf);
+                            let r: Result<Config, toml::de::Error> = toml::from_str(&buf);
                             match r {
                                 Ok(config) => config,
                                 Err(e) => {
-                                    log::error!("Failed to deserialize {}: {}", path.display(), e);
+                                    tracing::error!(
+                                        "Failed to deserialize {}: {}",
+                                        path.display(),
+                                        e
+                                    );
                                     Default::default()
                                 }
                             }
                         }
                         Err(e) => {
-                            log::error!("Failed to read {}: {}", path.display(), e);
+                            tracing::error!("Failed to read {}: {}", path.display(), e);
                             Default::default()
                         }
                     }
                 }
                 Err(e) => {
-                    log::error!("Failed to open {}: {}", path.display(), e);
+                    tracing::error!("Failed to open {}: {}", path.display(), e);
                     Default::default()
                 }
             }
         } else {
-            log::debug!("No ~/.clg.toml");
+            tracing::debug!("No ~/.clg.toml");
             Default::default()
         }
     }
