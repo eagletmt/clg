@@ -15,7 +15,7 @@ pub fn clone(args: crate::cli::CloneArgs) -> anyhow::Result<i32> {
 pub fn look(args: crate::cli::LookArgs) -> anyhow::Result<i32> {
     let config = super::Config::load_from_file();
     let mut local_repos = vec![];
-    visit_local_repositories(&config.root, &mut |path| {
+    visit_local_repositories(config.root, &mut |path| {
         if path.ends_with(&args.repository) {
             local_repos.push(path.to_path_buf());
         }
