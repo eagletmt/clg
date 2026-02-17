@@ -50,10 +50,10 @@ pub fn list(args: crate::cli::ListArgs) -> anyhow::Result<i32> {
             println!("{}", repo);
             if let Some(host_and_user) = host_and_path.parent() {
                 let user = host_and_user.file_name().unwrap();
-                if let Some(user) = user.to_str() {
-                    if !user.contains('.') {
-                        println!("{}/{}", std::path::Path::new(user).display(), repo);
-                    }
+                if let Some(user) = user.to_str()
+                    && !user.contains('.')
+                {
+                    println!("{}/{}", std::path::Path::new(user).display(), repo);
                 }
             }
         })?;
